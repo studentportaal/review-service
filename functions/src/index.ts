@@ -18,17 +18,17 @@ export const addReview = functions.https.onRequest((request, response) => {
     validate(review).then(errors => {
         if (errors.length > 0) {
             response.status(400).send('Invalid json object')
+        } else {
+            const data = JSON.parse(JSON.stringify(review));
+
+            firebase.firestore().collection('reviews').add(data).then(writeResult => {
+                response.status(201).send();
+            }).catch(err => {
+                response.status(400).send(err);
+            });
         }
     }).catch(error => {
         response.status(500).send('Error parsing json')
-    });
-
-    const data = JSON.parse(JSON.stringify(review));
-
-    firebase.firestore().collection('reviews').add(data).then(writeResult => {
-        response.status(201).send();
-    }).catch(err => {
-        response.status(400).send(err);
     });
 });
 
