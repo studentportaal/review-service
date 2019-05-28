@@ -18,5 +18,5 @@ export class Review {
     stars: number = 0;
 
     @IsNotEmpty()
-    isWritten: boolean = false;
+    written: boolean = false;
 }

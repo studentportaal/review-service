@@ -12,7 +12,7 @@ export const addReview = functions.https.onRequest((request, response) => {
     review.author = request.body.author;
     review.target = request.body.target;
     review.content = request.body.content;
-    review.isWritten = request.body.isWritten;
+    review.written = request.body.written;
     review.stars = request.body.stars;
 
     validate(review).then(errors => {
