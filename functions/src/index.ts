@@ -33,7 +33,9 @@ export const addReview = functions.https.onRequest((request, response) => {
 });
 
 export const getReviews = functions.https.onRequest((request, response) => {
-    const target = request.query.target;
+    const target: string = request.query.target;
+    const author: string = request.query.author;
+    const written: boolean = JSON.parse(request.query.written);
 
     if (!target) {
         response.status(400).send('No target specified in query params')
@@ -41,16 +43,22 @@ export const getReviews = functions.https.onRequest((request, response) => {
 
     firebase.firestore().collection('reviews')
         .where('target', '==', target)
-        .get().then(snapshot => {
-        if (!snapshot.empty) {
-            const reviews: any = [];
-            snapshot.docs.forEach(el => {
-                reviews.push(el.data())
-            });
-            response.status(200).send(reviews);
-        }
+        .where('author', '==', author)
+        .where('written', '==', written)
+        .get()
+        .then(snapshot => {
+            console.log(snapshot);
+            if (!snapshot.empty) {
+                const reviews: any = [];
+                snapshot.docs.forEach(el => {
+                    reviews.push(el.data())
+                });
+                response.status(200).send(reviews);
+            } else {
+                response.status(404).send();
+            }
 
-    }).catch(err => {
+        }).catch(err => {
         response.status(400).send(err);
     })
 });
