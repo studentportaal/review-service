@@ -7,6 +7,11 @@ import firebase from './Firebase'
 // https://firebase.google.com/docs/functions/typescript
 
 export const addReview = functions.https.onRequest((request, response) => {
+
+    response.set('Access-Control-Allow-Origin', '*');
+    response.set('Access-Control-Allow-Headers', '*');
+    response.set('Access-Control-Allow-Methods', '*');
+
     const review: Review = new Review();
     review.postDate = new Date();
     review.author = request.body.author;
@@ -33,6 +38,10 @@ export const addReview = functions.https.onRequest((request, response) => {
 });
 
 export const getReviews = functions.https.onRequest((request, response) => {
+    response.set('Access-Control-Allow-Origin', '*');
+    response.set('Access-Control-Allow-Headers', '*');
+    response.set('Access-Control-Allow-Methods', '*');
+
     const target: string = request.query.target;
     const author: string = request.query.author;
     const written: boolean = JSON.parse(request.query.written);
@@ -73,6 +82,13 @@ export const getReviews = functions.https.onRequest((request, response) => {
 });
 
 export const updateReview = functions.https.onRequest((request, response) => {
+
+    response.set('Access-Control-Allow-Origin', '*');
+    response.set('Access-Control-Allow-Headers', '*');
+    response.set('Access-Control-Allow-Methods', '*');
+
+    console.log(request.body);
+
     const id = request.body.id;
     const review: Review = new Review();
     review.postDate = new Date();
@@ -81,6 +97,8 @@ export const updateReview = functions.https.onRequest((request, response) => {
     review.content = request.body.content;
     review.written = request.body.written;
     review.stars = request.body.stars;
+
+    console.log(review);
 
     validate(review).then(errors => {
         if (errors.length > 0) {
