@@ -83,11 +83,9 @@ export const getReviews = functions.https.onRequest((request, response) => {
 
 export const updateReview = functions.https.onRequest((request, response) => {
 
-    response.set('Access-Control-Allow-Origin', '*');
-    response.set('Access-Control-Allow-Headers', '*');
-    response.set('Access-Control-Allow-Methods', '*');
-
-    console.log(request.body);
+    response.header('Access-Control-Allow-Origin', '*');
+    response.header('Access-Control-Allow-Headers', request.header('Access-Control-Request-Headers'));
+    response.header('Access-Control-Allow-Methods', request.header('Access-Control-Request-Method'));
 
     const id = request.body.id;
     const review: Review = new Review();
