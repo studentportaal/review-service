@@ -7,78 +7,86 @@ import firebase from './Firebase'
 // https://firebase.google.com/docs/functions/typescript
 
 export const addReview = functions.https.onRequest((request, response) => {
+    response.header('Access-Control-Allow-Origin', '*');
+    response.header('Access-Control-Allow-Headers', request.header('Access-Control-Request-Headers'));
+    response.header('Access-Control-Allow-Methods', request.header('Access-Control-Request-Method'));
 
-    response.set('Access-Control-Allow-Origin', '*');
-    response.set('Access-Control-Allow-Headers', '*');
-    response.set('Access-Control-Allow-Methods', '*');
+    if (request.method === 'OPTIONS') {
+        response.status(204).send();
+    } else if (request.method === 'POST') {
+        const review: Review = new Review();
+        review.postDate = new Date();
+        review.author = request.body.author;
+        review.target = request.body.target;
+        review.content = request.body.content;
+        review.written = request.body.written;
+        review.stars = request.body.stars;
 
-    const review: Review = new Review();
-    review.postDate = new Date();
-    review.author = request.body.author;
-    review.target = request.body.target;
-    review.content = request.body.content;
-    review.written = request.body.written;
-    review.stars = request.body.stars;
+        validate(review).then(errors => {
+            if (errors.length > 0) {
+                response.status(400).send('Invalid json object')
+            } else {
+                const data = JSON.parse(JSON.stringify(review));
 
-    validate(review).then(errors => {
-        if (errors.length > 0) {
-            response.status(400).send('Invalid json object')
-        } else {
-            const data = JSON.parse(JSON.stringify(review));
-
-            firebase.firestore().collection('reviews').add(data).then(writeResult => {
-                response.status(201).send();
-            }).catch(err => {
-                response.status(400).send(err);
-            });
-        }
-    }).catch(error => {
-        response.status(500).send('Error parsing json')
-    });
+                firebase.firestore().collection('reviews').add(data).then(writeResult => {
+                    response.status(201).send();
+                }).catch(err => {
+                    response.status(400).send(err);
+                });
+            }
+        }).catch(error => {
+            response.status(500).send('Error parsing json')
+        });
+    }
 });
 
 export const getReviews = functions.https.onRequest((request, response) => {
-    response.set('Access-Control-Allow-Origin', '*');
-    response.set('Access-Control-Allow-Headers', '*');
-    response.set('Access-Control-Allow-Methods', '*');
+    response.header('Access-Control-Allow-Origin', '*');
+    response.header('Access-Control-Allow-Headers', request.header('Access-Control-Request-Headers'));
+    response.header('Access-Control-Allow-Methods', request.header('Access-Control-Request-Method'));
 
-    const target: string = request.query.target;
-    const author: string = request.query.author;
-    const written: boolean = JSON.parse(request.query.written);
+    if (request.method === 'OPTIONS') {
+        response.status(204).send();
+    } else if (request.method === 'GET') {
+        const target: string = request.query.target;
+        const author: string = request.query.author;
+        const written: boolean = JSON.parse(request.query.written);
 
-    let query: any = firebase.firestore().collection('reviews');
+        let query: any = firebase.firestore().collection('reviews');
 
-    if (target) {
-        query = query.where('target', '==', target);
+        if (target) {
+            query = query.where('target', '==', target);
+        }
+
+        if (author) {
+            query = query.where('author', '==', author);
+        }
+
+        if (written !== null && written !== undefined) {
+            query = query.where('written', '==', written);
+        }
+
+        if (query) {
+            query.get()
+                .then((snapshot: any) => {
+                    if (!snapshot.empty) {
+                        const reviews: any = [];
+                        snapshot.docs.forEach((el: any) => {
+                            const review = el.data();
+                            review.id = el.id;
+                            reviews.push(review)
+                        });
+                        response.status(200).send(reviews);
+                    } else {
+                        response.status(404).send();
+                    }
+
+                }).catch((err: any) => {
+                response.status(400).send(err);
+            })
+        }
     }
 
-    if (author) {
-        query = query.where('author', '==', author);
-    }
-
-    if (written !== null && written !== undefined) {
-        query = query.where('written', '==', written);
-    }
-
-    if(query) {
-        query.get()
-            .then((snapshot: any)  => {
-                if (!snapshot.empty) {
-                    const reviews: any = [];
-                    snapshot.docs.forEach((el: any) => {
-                        const review = el.data();
-                        review.id = el.id;
-                        reviews.push(review)
-                    });
-                    response.status(200).send(reviews);
-                } else {
-                    response.status(404).send();
-                }
-
-            }).catch((err: any) => {
-            response.status(400).send(err);
-        })
-    }
 });
 
 export const updateReview = functions.https.onRequest((request, response) => {
@@ -87,31 +95,20 @@ export const updateReview = functions.https.onRequest((request, response) => {
     response.header('Access-Control-Allow-Headers', request.header('Access-Control-Request-Headers'));
     response.header('Access-Control-Allow-Methods', request.header('Access-Control-Request-Method'));
 
-    const id = request.body.id;
-    const review: Review = new Review();
-    review.postDate = new Date();
-    review.author = request.body.author;
-    review.target = request.body.target;
-    review.content = request.body.content;
-    review.written = request.body.written;
-    review.stars = request.body.stars;
+    if (request.method === 'OPTIONS') {
+        response.status(204).send();
+    } else if (request.method === 'PUT') {
+        const id = request.body.id;
+        const data = {
+            "content": request.body.content,
+            "written": request.body.written,
+            "stars": request.body.stars
+        };
 
-    console.log(review);
+        firebase.firestore().collection('reviews').doc(id).set(data, {merge: true}).then(() => {
+            response.status(204).send();
+        }).catch((err) => response.status(400).send())
 
-    validate(review).then(errors => {
-        if (errors.length > 0) {
-            response.status(400).send('Invalid json object')
-        } else {
-            const data = JSON.parse(JSON.stringify(review));
-
-            firebase.firestore().collection('reviews').doc(id).set(data).then(() => {
-                response.status(204).send();
-            }).catch(err => {
-                response.status(400).send(err);
-            });
-        }
-    }).catch(error => {
-        response.status(500).send('Error parsing json')
-    });
+    }
 });
 
