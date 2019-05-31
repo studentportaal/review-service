@@ -1,6 +1,8 @@
 import {IsInt, IsNotEmpty, Max, Min, IsDate} from "class-validator";
 
 export class Review {
+
+    id: string = '';
     // Author of the review, Either a student or Company uuid
     @IsNotEmpty()
     author: string = '';

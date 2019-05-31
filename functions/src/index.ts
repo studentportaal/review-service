@@ -37,29 +37,65 @@ export const getReviews = functions.https.onRequest((request, response) => {
     const author: string = request.query.author;
     const written: boolean = JSON.parse(request.query.written);
 
-    if (!target) {
-        response.status(400).send('No target specified in query params')
+    let query: any = firebase.firestore().collection('reviews');
+
+    if (target) {
+        query = query.where('target', '==', target);
     }
 
-    firebase.firestore().collection('reviews')
-        .where('target', '==', target)
-        .where('author', '==', author)
-        .where('written', '==', written)
-        .get()
-        .then(snapshot => {
-            console.log(snapshot);
-            if (!snapshot.empty) {
-                const reviews: any = [];
-                snapshot.docs.forEach(el => {
-                    reviews.push(el.data())
-                });
-                response.status(200).send(reviews);
-            } else {
-                response.status(404).send();
-            }
+    if (author) {
+        query = query.where('author', '==', author);
+    }
 
-        }).catch(err => {
-        response.status(400).send(err);
-    })
+    if (written !== null && written !== undefined) {
+        query = query.where('written', '==', written);
+    }
+
+    if(query) {
+        query.get()
+            .then((snapshot: any)  => {
+                if (!snapshot.empty) {
+                    const reviews: any = [];
+                    snapshot.docs.forEach((el: any) => {
+                        const review = el.data();
+                        review.id = el.id;
+                        reviews.push(review)
+                    });
+                    response.status(200).send(reviews);
+                } else {
+                    response.status(404).send();
+                }
+
+            }).catch((err: any) => {
+            response.status(400).send(err);
+        })
+    }
+});
+
+export const updateReview = functions.https.onRequest((request, response) => {
+    const id = request.body.id;
+    const review: Review = new Review();
+    review.postDate = new Date();
+    review.author = request.body.author;
+    review.target = request.body.target;
+    review.content = request.body.content;
+    review.written = request.body.written;
+    review.stars = request.body.stars;
+
+    validate(review).then(errors => {
+        if (errors.length > 0) {
+            response.status(400).send('Invalid json object')
+        } else {
+            const data = JSON.parse(JSON.stringify(review));
+
+            firebase.firestore().collection('reviews').doc(id).set(data).then(() => {
+                response.status(204).send();
+            }).catch(err => {
+                response.status(400).send(err);
+            });
+        }
+    }).catch(error => {
+        response.status(500).send('Error parsing json')
+    });
 });
 
