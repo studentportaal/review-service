@@ -6,7 +6,7 @@ import firebase from './Firebase'
 // Start writing Firebase Functions
 // https://firebase.google.com/docs/functions/typescript
 
-export const addReview = functions.https.onRequest((request, response) => {
+export const addReview = functions.region('europe-west1').https.onRequest((request, response) => {
     response.header('Access-Control-Allow-Origin', '*');
     response.header('Access-Control-Allow-Headers', request.header('Access-Control-Request-Headers'));
     response.header('Access-Control-Allow-Methods', request.header('Access-Control-Request-Method'));
@@ -40,7 +40,7 @@ export const addReview = functions.https.onRequest((request, response) => {
     }
 });
 
-export const getReviews = functions.https.onRequest((request, response) => {
+export const getReviews = functions.region('europe-west1').https.onRequest((request, response) => {
     response.header('Access-Control-Allow-Origin', '*');
     response.header('Access-Control-Allow-Headers', request.header('Access-Control-Request-Headers'));
     response.header('Access-Control-Allow-Methods', request.header('Access-Control-Request-Method'));
@@ -89,7 +89,7 @@ export const getReviews = functions.https.onRequest((request, response) => {
 
 });
 
-export const updateReview = functions.https.onRequest((request, response) => {
+export const updateReview = functions.region('europe-west1').https.onRequest((request, response) => {
 
     response.header('Access-Control-Allow-Origin', '*');
     response.header('Access-Control-Allow-Headers', request.header('Access-Control-Request-Headers'));
